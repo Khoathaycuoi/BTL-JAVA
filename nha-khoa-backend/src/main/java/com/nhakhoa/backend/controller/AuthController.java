@@ -1,10 +1,10 @@
 package com.nhakhoa.backend.controller;
 
-import com.nhakhoa.backend.dto.RegisterRequest;
-import com.nhakhoa.backend.entity.ConNguoi;
-import com.nhakhoa.backend.entity.KhachHang;
-import com.nhakhoa.backend.repository.ConNguoiRepository;
-import com.nhakhoa.backend.repository.KhachHangRepository;
+import com.nhakhoa.backend.dto.RegisterBacSiRequest;
+import com.nhakhoa.backend.dto.RegisterKhachHangRequest;
+import com.nhakhoa.backend.dto.RegisterNhanVienRequest;
+import com.nhakhoa.backend.entity.*;
+import com.nhakhoa.backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,45 +17,135 @@ public class AuthController {
 
     @Autowired
     private ConNguoiRepository conNguoiRepo;
-
     @Autowired
     private KhachHangRepository khachHangRepo;
+    @Autowired
+    private NhanVienRepository nhanVienRepo;
+    @Autowired
+    private BacSiRepository bacSiRepo;
+    @Autowired
+    private TaiKhoanRepository taiKhoanRepo;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerKhachHang(@RequestBody RegisterRequest request) {
+    //ĐĂNG KÝ KHÁCH HÀNG
+    @PostMapping("/register/khach-hang")
+    public ResponseEntity<?> registerKhachHang(@RequestBody RegisterKhachHangRequest request) {
         try {
-            //CCCD đã tồn tại chưa
             if (conNguoiRepo.existsById(request.getMaDinhDanh())) {
-                return ResponseEntity.badRequest().body("Lỗi: Mã định danh (CCCD) đã tồn tại!");
+                return ResponseEntity.badRequest().body("Lỗi: Mã định danh đã tồn tại!");
             }
 
-            // 2. Lưu thông tin cơ bản vào bảng Con_nguoi
-            ConNguoi cn = new ConNguoi();
-            cn.setMaDinhDanh(request.getMaDinhDanh());
-            cn.setTen(request.getTen());
-            cn.setSdt(request.getSdt());
-            cn.setGioiTinh(request.getGioiTinh());
-            cn.setNgaySinh(request.getNgaySinh());
-            cn.setDiaChi(request.getDiaChi());
-            conNguoiRepo.save(cn);
+            if (conNguoiRepo.existsBySdt(request.getSdt())) {
+                return ResponseEntity.badRequest().body("Lỗi: Số điện thoại đã được sử dụng!");
+            }
 
-            // 3. TỰ ĐỘNG SINH MÃ KHÁCH HÀNG (Format: KH_0001, KH_0002...)
-            long count = khachHangRepo.count(); // Đếm xem DB đang có bao nhiêu khách
-            String newMaKH = String.format("KH_%04d", count + 1); // Format thành chuỗi 4 số
+            ConNguoi cn = saveConNguoi(request.getMaDinhDanh(), request.getTen(), request.getSdt(),
+                    request.getGioiTinh(), request.getNgaySinh(), request.getDiaChi());
 
-            // 4. Lưu vào bảng Khach_hang
+            String maKH = String.format("KH_%04d", khachHangRepo.count() + 1);
             KhachHang kh = new KhachHang();
-            kh.setMaKH(newMaKH); // Gắn mã tự động vào
-            kh.setMaDinhDanh(request.getMaDinhDanh());
+            kh.setMaKH(maKH);
+            kh.setMaDinhDanh(cn.getMaDinhDanh());
             kh.setNgayDangKy(LocalDate.now());
             kh.setTienSuBenh(request.getTienSuBenh());
             khachHangRepo.save(kh);
 
+            //username là sdt, password từ request
+            saveTaiKhoan(request.getSdt(), request.getMatKhau(), "ROLE_USER", cn.getMaDinhDanh());
 
-            return ResponseEntity.ok("Đăng ký thành công! Mã khách hàng mới là: " + newMaKH);
-
+            return ResponseEntity.ok("Đăng ký Khách hàng thành công! \nUsername: " + request.getSdt() + "\npassword: " + request.getMatKhau());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Lỗi: " + e.getMessage());
         }
+    }
+
+    //ĐĂNG KÝ NHÂN VIÊN
+    @PostMapping("/register/nhan-vien")
+    public ResponseEntity<?> registerNhanVien(@RequestBody RegisterNhanVienRequest request) {
+        try {
+            if (conNguoiRepo.existsById(request.getMaDinhDanh())) {
+                return ResponseEntity.badRequest().body("Lỗi: Mã định danh đã tồn tại!");
+            }
+
+            if (conNguoiRepo.existsBySdt(request.getSdt())) {
+                return ResponseEntity.badRequest().body("Lỗi: Số điện thoại đã được sử dụng!");
+            }
+
+            ConNguoi cn = saveConNguoi(request.getMaDinhDanh(), request.getTen(), request.getSdt(),
+                    request.getGioiTinh(), request.getNgaySinh(), request.getDiaChi());
+
+            String idNV = String.format("NV_%04d", nhanVienRepo.count() + 1);
+            NhanVien nv = new NhanVien();
+            nv.setIdNhanVien(idNV);
+            nv.setMaDinhDanh(cn.getMaDinhDanh());
+            nv.setTrangThai("Đang làm việc");
+            nhanVienRepo.save(nv);
+
+            saveTaiKhoan(request.getSdt(), request.getMatKhau(), "ROLE_NHANVIEN", cn.getMaDinhDanh());
+
+            return ResponseEntity.ok("Đăng ký Nhân viên thành công! \nUsername: " + request.getSdt() + "\npassword: " + request.getMatKhau());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi: " + e.getMessage());
+        }
+    }
+
+    // ĐĂNG KÝ BÁC SĨ
+    @PostMapping("/register/bac-si")
+    public ResponseEntity<?> registerBacSi(@RequestBody RegisterBacSiRequest request) {
+        try {
+            if (conNguoiRepo.existsById(request.getMaDinhDanh())) {
+                return ResponseEntity.badRequest().body("Lỗi: Mã định danh đã tồn tại!");
+            }
+
+            if (conNguoiRepo.existsBySdt(request.getSdt())) {
+                return ResponseEntity.badRequest().body("Lỗi: Số điện thoại đã được sử dụng!");
+            }
+
+            ConNguoi cn = saveConNguoi(request.getMaDinhDanh(), request.getTen(), request.getSdt(),
+                    request.getGioiTinh(), request.getNgaySinh(), request.getDiaChi());
+
+            String idNV = String.format("NV_%04d", nhanVienRepo.count() + 1);
+            NhanVien nv = new NhanVien();
+            nv.setIdNhanVien(idNV);
+            nv.setMaDinhDanh(cn.getMaDinhDanh());
+            nv.setTrangThai("Đang làm việc");
+            nhanVienRepo.save(nv);
+
+            String maBS = String.format("BS_%04d", bacSiRepo.count() + 1);
+            BacSi bs = new BacSi();
+            bs.setMaBacSi(maBS);
+            bs.setIdNhanVien(idNV);
+            bs.setChungChi(request.getChungChi());
+            bs.setBangCap(request.getBangCap());
+            bs.setNamKinhNghiem(request.getNamKinhNghiem());
+            bacSiRepo.save(bs);
+
+            saveTaiKhoan(request.getSdt(), request.getMatKhau(), "ROLE_BACSI", cn.getMaDinhDanh());
+
+            return ResponseEntity.ok("Đăng ký Bác sĩ thành công! \nUsername: " + request.getSdt() + "\npassword: " + request.getMatKhau());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi: " + e.getMessage());
+        }
+    }
+
+    //lưu tài khoản
+    private void saveTaiKhoan(String username, String password, String role, String maDinhDanh) {
+        TaiKhoan tk = new TaiKhoan();
+        tk.setTenDangNhap(username);
+        tk.setMatKhau(password);
+        tk.setVaiTro(role);
+        tk.setTrangThai("Hoạt động");
+        tk.setMaDinhDanh(maDinhDanh);
+        taiKhoanRepo.save(tk);
+    }
+
+    private ConNguoi saveConNguoi(String maDinhDanh, String ten, String sdt, String gioiTinh, LocalDate ngaySinh, String diaChi) {
+        ConNguoi cn = new ConNguoi();
+        cn.setMaDinhDanh(maDinhDanh);
+        cn.setTen(ten);
+        cn.setSdt(sdt);
+        cn.setGioiTinh(gioiTinh);
+        cn.setNgaySinh(ngaySinh);
+        cn.setDiaChi(diaChi);
+        return conNguoiRepo.save(cn);
     }
 }

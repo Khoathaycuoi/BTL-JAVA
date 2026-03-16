@@ -2,16 +2,26 @@ package com.nhakhoa.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalTime;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @Entity
 @Table(name = "Cham_cong")
 public class ChamCong {
+
     @Id
     @Column(name = "Ma_cham_cong", length = 20)
     private String maChamCong;
+
+    // Quan hệ Nhiều - 1: Nhiều bản ghi Chấm công thuộc về 1 Nhân viên
+    @ManyToOne
+    @JoinColumn(name = "ID_nhan_vien", nullable = false)
+    private NhanVien nhanVien;
+
+    @Column(name = "Ngay_cham_cong", nullable = false)
+    private LocalDate ngayChamCong;
 
     @Column(name = "Trang_thai", length = 50)
     private String trangThai;

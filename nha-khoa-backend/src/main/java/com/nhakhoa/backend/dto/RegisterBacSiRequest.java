@@ -4,15 +4,15 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class RegisterRequest {
-    // Thông tin Con_nguoi
-    private String maDinhDanh; // CCCD
+public class RegisterBacSiRequest {
+    private String maDinhDanh;
     private String ten;
     private String sdt;
     private String gioiTinh;
     private LocalDate ngaySinh;
     private String diaChi;
-
-    // Thông tin Khach_hang
-    private String tienSuBenh;
+    private String chungChi;
+    private String bangCap;
+    private Integer namKinhNghiem;
+    private String matKhau;
 }
