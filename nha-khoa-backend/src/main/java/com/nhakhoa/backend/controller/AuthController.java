@@ -1,5 +1,6 @@
 package com.nhakhoa.backend.controller;
 
+import com.nhakhoa.backend.dto.LoginRequest;
 import com.nhakhoa.backend.dto.RegisterBacSiRequest;
 import com.nhakhoa.backend.dto.RegisterKhachHangRequest;
 import com.nhakhoa.backend.dto.RegisterNhanVienRequest;
@@ -147,5 +148,15 @@ public class AuthController {
         cn.setNgaySinh(ngaySinh);
         cn.setDiaChi(diaChi);
         return conNguoiRepo.save(cn);
+    }
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        TaiKhoan tk = taiKhoanRepo.findById(request.getUsername()).orElse(null);
+
+        if (tk == null || !tk.getMatKhau().equals(request.getPassword())) {
+            return ResponseEntity.status(401).body("Lỗi: Sai tên đăng nhập hoặc mật khẩu");
+        }
+
+        return ResponseEntity.ok("Đăng nhập thành công! ID: " + tk.getMaDinhDanh() + " Quyền: " + tk.getVaiTro());
     }
 }
