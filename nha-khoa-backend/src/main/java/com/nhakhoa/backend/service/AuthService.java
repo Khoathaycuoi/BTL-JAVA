@@ -6,6 +6,7 @@ import com.nhakhoa.backend.dto.RegisterKhachHangRequest;
 import com.nhakhoa.backend.dto.RegisterNhanVienRequest;
 import com.nhakhoa.backend.entity.*;
 import com.nhakhoa.backend.repository.*;
+import com.nhakhoa.backend.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,9 @@ public class AuthService {
 
     @Autowired
     private TaiKhoanRepository taiKhoanRepo;
+
+    @Autowired
+    private JwtService jwtService;
 
     @Transactional
     public String registerKhachHang(RegisterKhachHangRequest request) {
@@ -97,12 +101,14 @@ public class AuthService {
         return "Đăng ký Bác sĩ thành công! \nUsername: " + request.getSdt() + "\npassword: " + request.getMatKhau();
     }
 
-    public TaiKhoan login(LoginRequest request) {
+
+    public String login(LoginRequest request) {
         TaiKhoan tk = taiKhoanRepo.findById(request.getUsername()).orElse(null);
         if (tk == null || !tk.getMatKhau().equals(request.getPassword())) {
             throw new RuntimeException("Sai tên đăng nhập hoặc mật khẩu");
         }
-        return tk;
+
+        return jwtService.generateToken(tk.getTenDangNhap(), tk.getVaiTro());
     }
 
     private void checkConNguoi(String maDinhDanh, String sdt) {
