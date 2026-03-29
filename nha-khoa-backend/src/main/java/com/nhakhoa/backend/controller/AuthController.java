@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -50,8 +51,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            TaiKhoan tk = authService.login(request);
-            return ResponseEntity.ok("Đăng nhập thành công! ID: " + tk.getMaDinhDanh() + " Quyền: " + tk.getVaiTro());
+            String token = authService.login(request);
+            return ResponseEntity.ok(token);
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Lỗi: " + e.getMessage());
         }
