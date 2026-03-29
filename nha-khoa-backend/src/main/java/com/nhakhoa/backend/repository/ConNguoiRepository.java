@@ -8,5 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface ConNguoiRepository extends JpaRepository<ConNguoi, String> {
 
     boolean existsBySdt(String sdt);
+    java.util.Optional<ConNguoi> findBySdt(String sdt);
 
 }

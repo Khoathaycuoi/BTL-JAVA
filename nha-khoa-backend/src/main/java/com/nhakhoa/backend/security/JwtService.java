@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -12,7 +13,8 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "5e52a0519447e04f112a108e69509b1e168c41b427bde6bd47c0506250b59778";
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
     private static final long EXPIRATION_TIME = 86400000; // 24 giờ
 
     public String generateToken(String username, String role) {
@@ -29,6 +31,11 @@ public class JwtService {
         return extractAllClaims(token).getSubject();
     }
 
+    // ĐÂY CHÍNH LÀ HÀM BẠN ĐANG THIẾU
+    public String extractRole(String token) {
+        return extractAllClaims(token).get("role", String.class);
+    }
+
     public boolean isTokenValid(String token, String username) {
         final String tokenUsername = extractUsername(token);
         return (tokenUsername.equals(username)) && !isTokenExpired(token);
@@ -38,7 +45,8 @@ public class JwtService {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
 
-    private Claims extractAllClaims(String token) {
+    // LƯU Ý: Hàm này phải là 'public' thì extractRole và filter mới gọi được
+    public Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigninKey())
                 .build()
