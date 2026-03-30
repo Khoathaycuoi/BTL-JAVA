@@ -7,7 +7,9 @@ import com.nhakhoa.backend.dto.RegisterNhanVienRequest;
 import com.nhakhoa.backend.entity.*;
 import com.nhakhoa.backend.repository.*;
 import com.nhakhoa.backend.security.JwtService;
+import com.nhakhoa.backend.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,24 +20,22 @@ public class AuthService {
 
     @Autowired
     private ConNguoiRepository conNguoiRepo;
-
     @Autowired
     private KhachHangRepository khachHangRepo;
-
     @Autowired
     private NhanVienRepository nhanVienRepo;
-
     @Autowired
     private BacSiRepository bacSiRepo;
-
     @Autowired
     private TaiKhoanRepository taiKhoanRepo;
-
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Transactional
     public String registerKhachHang(RegisterKhachHangRequest request) {
+        // Khách hàng thì ai cũng tự đăng ký được, không cần kiểm tra quyền
         checkConNguoi(request.getMaDinhDanh(), request.getSdt());
 
         ConNguoi cn = saveConNguoi(request.getMaDinhDanh(), request.getTen(), request.getSdt(),
@@ -56,6 +56,12 @@ public class AuthService {
 
     @Transactional
     public String registerNhanVien(RegisterNhanVienRequest request) {
+        // KIỂM TRA QUYỀN: Chỉ ADMIN mới được tạo Nhân viên
+        String role = SecurityUtils.getCurrentUserRole();
+        if (role == null || !role.equals("ROLE_ADMIN")) {
+            throw new RuntimeException("Chỉ Admin mới có quyền tạo Nhân viên!");
+        }
+
         checkConNguoi(request.getMaDinhDanh(), request.getSdt());
 
         ConNguoi cn = saveConNguoi(request.getMaDinhDanh(), request.getTen(), request.getSdt(),
@@ -75,6 +81,12 @@ public class AuthService {
 
     @Transactional
     public String registerBacSi(RegisterBacSiRequest request) {
+        // KIỂM TRA QUYỀN: Chỉ ADMIN mới được tạo Bác sĩ
+        String role = SecurityUtils.getCurrentUserRole();
+        if (role == null || !role.equals("ROLE_ADMIN")) {
+            throw new RuntimeException("Chỉ Admin mới có quyền tạo Bác sĩ!");
+        }
+
         checkConNguoi(request.getMaDinhDanh(), request.getSdt());
 
         ConNguoi cn = saveConNguoi(request.getMaDinhDanh(), request.getTen(), request.getSdt(),
@@ -101,11 +113,11 @@ public class AuthService {
         return "Đăng ký Bác sĩ thành công! \nUsername: " + request.getSdt() + "\npassword: " + request.getMatKhau();
     }
 
-
     public String login(LoginRequest request) {
         TaiKhoan tk = taiKhoanRepo.findById(request.getUsername()).orElse(null);
-        if (tk == null || !tk.getMatKhau().equals(request.getPassword())) {
-            throw new RuntimeException("Sai tên đăng nhập hoặc mật khẩu");
+
+        if (tk == null || !passwordEncoder.matches(request.getPassword(), tk.getMatKhau())) {
+            throw new RuntimeException("Lỗi: Sai tên đăng nhập hoặc mật khẩu");
         }
 
         return jwtService.generateToken(tk.getTenDangNhap(), tk.getVaiTro());
@@ -123,7 +135,7 @@ public class AuthService {
     private void saveTaiKhoan(String username, String password, String role, String maDinhDanh) {
         TaiKhoan tk = new TaiKhoan();
         tk.setTenDangNhap(username);
-        tk.setMatKhau(password);
+        tk.setMatKhau(passwordEncoder.encode(password));
         tk.setVaiTro(role);
         tk.setTrangThai("Hoạt động");
         tk.setMaDinhDanh(maDinhDanh);
