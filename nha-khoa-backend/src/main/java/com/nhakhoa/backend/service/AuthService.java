@@ -120,6 +120,10 @@ public class AuthService {
             throw new RuntimeException("Lỗi: Sai tên đăng nhập hoặc mật khẩu");
         }
 
+        if ("Không hoạt động".equalsIgnoreCase(tk.getTrangThai())) {
+            throw new RuntimeException("Tài khoản này đã bị vô hiệu hóa!");
+        }
+
         return jwtService.generateToken(tk.getTenDangNhap(), tk.getVaiTro());
     }
 
