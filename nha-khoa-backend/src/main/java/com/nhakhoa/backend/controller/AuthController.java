@@ -6,6 +6,7 @@ import com.nhakhoa.backend.dto.RegisterKhachHangRequest;
 import com.nhakhoa.backend.dto.RegisterNhanVienRequest;
 import com.nhakhoa.backend.entity.TaiKhoan;
 import com.nhakhoa.backend.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register/khach-hang")
-    public ResponseEntity<?> registerKhachHang(@RequestBody RegisterKhachHangRequest request) {
+    public ResponseEntity<?> registerKhachHang(@Valid @RequestBody RegisterKhachHangRequest request) {
         try {
             String response = authService.registerKhachHang(request);
             return ResponseEntity.ok(response);
@@ -29,7 +30,7 @@ public class AuthController {
     }
 
     @PostMapping("/register/nhan-vien")
-    public ResponseEntity<?> registerNhanVien(@RequestBody RegisterNhanVienRequest request) {
+    public ResponseEntity<?> registerNhanVien(@Valid @RequestBody RegisterNhanVienRequest request) {
         try {
             String response = authService.registerNhanVien(request);
             return ResponseEntity.ok(response);
@@ -39,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/register/bac-si")
-    public ResponseEntity<?> registerBacSi(@RequestBody RegisterBacSiRequest request) {
+    public ResponseEntity<?> registerBacSi(@Valid @RequestBody RegisterBacSiRequest request) {
         try {
             String response = authService.registerBacSi(request);
             return ResponseEntity.ok(response);
