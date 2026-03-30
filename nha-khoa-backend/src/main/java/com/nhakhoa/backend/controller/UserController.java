@@ -5,9 +5,8 @@ import com.nhakhoa.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -17,19 +16,16 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // Chỉ ADMIN mới xem được danh sách Bác sĩ
     @GetMapping("/bac-si")
     public ResponseEntity<List<UserResponse>> getBacSi() {
         return ResponseEntity.ok(userService.getAllBacSi());
     }
 
-    // Chỉ ADMIN mới xem được danh sách Nhân viên
     @GetMapping("/nhan-vien")
     public ResponseEntity<List<UserResponse>> getNhanVien() {
         return ResponseEntity.ok(userService.getAllNhanVien());
     }
 
-    // ADMIN và NHANVIEN đều xem được danh sách Khách hàng
     @GetMapping("/khach-hang")
     public ResponseEntity<List<UserResponse>> getKhachHang() {
         return ResponseEntity.ok(userService.getAllKhachHang());
@@ -42,5 +38,28 @@ public class UserController {
             return ResponseEntity.status(404).body("Không tìm thấy thông tin người dùng");
         }
         return ResponseEntity.ok(myInfo);
+    }
+    // Xóa mềm
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{username}/xoa")
+    public ResponseEntity<?> xoaTaiKhoan(@PathVariable String username) {
+        try {
+            userService.xoaMemTaiKhoan(username);
+            return ResponseEntity.ok("Đã vô hiệu hóa tài khoản thành công!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Khôi phục
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{username}/khoi-phuc")
+    public ResponseEntity<?> khoiPhucTaiKhoan(@PathVariable String username) {
+        try {
+            userService.khoiPhucTaiKhoan(username);
+            return ResponseEntity.ok("Đã khôi phục tài khoản thành công!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

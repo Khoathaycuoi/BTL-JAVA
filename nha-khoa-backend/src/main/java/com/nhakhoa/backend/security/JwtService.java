@@ -31,7 +31,6 @@ public class JwtService {
         return extractAllClaims(token).getSubject();
     }
 
-    // ĐÂY CHÍNH LÀ HÀM BẠN ĐANG THIẾU
     public String extractRole(String token) {
         return extractAllClaims(token).get("role", String.class);
     }
@@ -45,7 +44,6 @@ public class JwtService {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
 
-    // LƯU Ý: Hàm này phải là 'public' thì extractRole và filter mới gọi được
     public Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigninKey())
