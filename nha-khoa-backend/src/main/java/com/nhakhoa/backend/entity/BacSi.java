@@ -22,7 +22,7 @@ public class BacSi {
     private String bangCap;
 
     @Column(name = "Nam_kinh_nghiem")
-    private Integer namKinhNghiem;
+    private Integer soNamKinhNghiem;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
