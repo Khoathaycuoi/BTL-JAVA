@@ -3,6 +3,8 @@ package com.nhakhoa.backend.dto;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import java.time.LocalDate;
+import com.nhakhoa.backend.validation.TuoiHopLe;
+
 
 @Data
 public class RegisterBacSiRequest {
@@ -12,6 +14,7 @@ public class RegisterBacSiRequest {
     @Pattern(regexp = "^0[3|5|7|8|9]\\d{8}$", message = "Số điện thoại không hợp lệ (phải bắt đầu bằng 03,05,07,08,09 và có 10 số)")
     private String sdt;
     private String gioiTinh;
+    @TuoiHopLe
     private LocalDate ngaySinh;
     private String diaChi;
     private String chungChi;

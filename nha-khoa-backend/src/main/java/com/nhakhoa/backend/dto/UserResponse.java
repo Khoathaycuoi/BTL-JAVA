@@ -18,4 +18,7 @@ public class UserResponse {
     private String bangCap;
     private String chungChi;
     private LocalDate ngaySinh;
+    private String tienSuBenh;
+    private Integer soNamKinhNghiem;
+    private String trangThai;
 }

@@ -36,6 +36,7 @@ public class AuthService {
     @Transactional
     public String registerKhachHang(RegisterKhachHangRequest request) {
         // Khách hàng thì ai cũng tự đăng ký được, không cần kiểm tra quyền
+
         checkConNguoi(request.getMaDinhDanh(), request.getSdt());
 
         ConNguoi cn = saveConNguoi(request.getMaDinhDanh(), request.getTen(), request.getSdt(),
@@ -105,7 +106,7 @@ public class AuthService {
         bs.setIdNhanVien(idNV);
         bs.setChungChi(request.getChungChi());
         bs.setBangCap(request.getBangCap());
-        bs.setNamKinhNghiem(request.getNamKinhNghiem());
+        bs.setSoNamKinhNghiem(request.getNamKinhNghiem());
         bacSiRepo.save(bs);
 
         saveTaiKhoan(request.getSdt(), request.getMatKhau(), "ROLE_BACSI", cn.getMaDinhDanh());
