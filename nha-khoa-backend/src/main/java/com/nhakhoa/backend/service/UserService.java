@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.nhakhoa.backend.dto.UpdateMeRequest;
+import com.nhakhoa.backend.dto.ChangePasswordRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 
 @Service
@@ -27,14 +29,22 @@ public class UserService {
     private ConNguoiRepository conNguoiRepo;
     @Autowired
     private TaiKhoanRepository taiKhoanRepo;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     public List<UserResponse> getAllBacSi() {
         return bacSiRepo.findAll().stream().map(bs -> {
             NhanVien nv = nhanVienRepo.findById(bs.getIdNhanVien()).orElse(null);
             if (nv == null) return null;
             ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
-            return new UserResponse(bs.getMaBacSi(), cn != null ? cn.getTen() : "N/A",
+            return new UserResponse(bs.getMaBacSi(),
+                    cn != null ? cn.getTen() : "N/A",
                     cn != null ? cn.getSdt() : "N/A",
-                    cn != null ? cn.getGioiTinh() : "N/A", "BAC_SI");
+                    cn != null ? cn.getGioiTinh() : "N/A",
+                    "BAC_SI",
+                    cn != null ? cn.getDiaChi() : "N/A",
+                    bs.getBangCap(),
+                    bs.getChungChi(),
+                    cn != null ? cn.getNgaySinh() : null);
         }).filter(item -> item != null).collect(Collectors.toList());
     }
 
@@ -43,18 +53,30 @@ public class UserService {
                 .filter(nv -> !bacSiRepo.existsByIdNhanVien(nv.getIdNhanVien()))
                 .map(nv -> {
                     ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
-                    return new UserResponse(nv.getIdNhanVien(), cn != null ? cn.getTen() : "N/A",
+                    return new UserResponse(nv.getIdNhanVien(),
+                            cn != null ? cn.getTen() : "N/A",
                             cn != null ? cn.getSdt() : "N/A",
-                            cn != null ? cn.getGioiTinh() : "N/A", "NHAN_VIEN");
+                            cn != null ? cn.getGioiTinh() : "N/A",
+                            "NHAN_VIEN",
+                            cn != null ? cn.getDiaChi() : "N/A",
+                            null,
+                            null,
+                            cn != null ? cn.getNgaySinh() : null);
                 }).collect(Collectors.toList());
     }
 
     public List<UserResponse> getAllKhachHang() {
         return khachHangRepo.findAll().stream().map(kh -> {
             ConNguoi cn = conNguoiRepo.findById(kh.getMaDinhDanh()).orElse(null);
-            return new UserResponse(kh.getMaKH(), cn != null ? cn.getTen() : "N/A",
+            return new UserResponse(kh.getMaKH(),
+                    cn != null ? cn.getTen() : "N/A",
                     cn != null ? cn.getSdt() : "N/A",
-                    cn != null ? cn.getGioiTinh() : "N/A", "KHACH_HANG");
+                    cn != null ? cn.getGioiTinh() : "N/A",
+                    "KHACH_HANG",
+                    cn != null ? cn.getDiaChi() : "N/A",
+                    null,
+                    null,
+                    cn != null ? cn.getNgaySinh() : null);
         }).collect(Collectors.toList());
     }
 
@@ -70,6 +92,8 @@ public class UserService {
 
         String role = tk.getVaiTro();
         String id = "N/A";
+        String bangCap = null;
+        String chungChi = null;
 
         if ("ROLE_ADMIN".equals(role)) {
             id = cn.getMaDinhDanh();
@@ -77,7 +101,11 @@ public class UserService {
             var nv = nhanVienRepo.findByMaDinhDanh(cn.getMaDinhDanh()).orElse(null);
             if (nv != null) {
                 var bs = bacSiRepo.findByIdNhanVien(nv.getIdNhanVien()).orElse(null);
-                if (bs != null) id = bs.getMaBacSi();
+                if (bs != null) {
+                    id = bs.getMaBacSi();
+                    bangCap = bs.getBangCap();
+                    chungChi = bs.getChungChi();
+                }
             }
         } else if ("ROLE_NHANVIEN".equals(role)) {
             var nv = nhanVienRepo.findByMaDinhDanh(cn.getMaDinhDanh()).orElse(null);
@@ -87,7 +115,7 @@ public class UserService {
             if (kh != null) id = kh.getMaKH();
         }
 
-        return new UserResponse(id, cn.getTen(), cn.getSdt(), cn.getGioiTinh(), role);
+        return new UserResponse(id, cn.getTen(), cn.getSdt(), cn.getGioiTinh(), role, cn.getDiaChi(), bangCap, chungChi, cn.getNgaySinh());
     }
 
     @Transactional
@@ -128,6 +156,22 @@ public class UserService {
         }
 
         tk.setTrangThai("Hoạt động");
+        taiKhoanRepo.save(tk);
+    }
+
+    @Transactional
+    public void changeMyPassword(ChangePasswordRequest request) {
+        String username = SecurityUtils.getCurrentUsername();
+        if (username == null) throw new RuntimeException("Chưa xác thực người dùng");
+
+        TaiKhoan tk = taiKhoanRepo.findByTenDangNhap(username);
+        if (tk == null) throw new RuntimeException("Không tìm thấy tài khoản");
+
+        if (!passwordEncoder.matches(request.getOldPassword(), tk.getMatKhau())) {
+            throw new RuntimeException("Mật khẩu cũ không chính xác");
+        }
+
+        tk.setMatKhau(passwordEncoder.encode(request.getNewPassword()));
         taiKhoanRepo.save(tk);
     }
 }

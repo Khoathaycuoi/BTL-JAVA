@@ -10,6 +10,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import com.nhakhoa.backend.dto.ChangePasswordRequest;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -74,6 +78,18 @@ public class UserController {
         try {
             userService.updateMyInfo(request);
             return ResponseEntity.ok("Cập nhật thông tin thành công!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
+
+    @PutMapping("/me/password")
+    public ResponseEntity<?> changeMyPassword(@Valid @RequestBody ChangePasswordRequest request) {
+        try {
+            userService.changeMyPassword(request);
+            return ResponseEntity.ok("Đổi mật khẩu thành công!");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
