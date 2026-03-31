@@ -1,11 +1,15 @@
 package com.nhakhoa.backend.controller;
 
+import com.nhakhoa.backend.dto.UpdateMeRequest;
 import com.nhakhoa.backend.dto.UserResponse;
 import com.nhakhoa.backend.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -58,6 +62,18 @@ public class UserController {
         try {
             userService.khoiPhucTaiKhoan(username);
             return ResponseEntity.ok("Đã khôi phục tài khoản thành công!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateMyInfo(@Valid @RequestBody UpdateMeRequest request) {
+        try {
+            userService.updateMyInfo(request);
+            return ResponseEntity.ok("Cập nhật thông tin thành công!");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

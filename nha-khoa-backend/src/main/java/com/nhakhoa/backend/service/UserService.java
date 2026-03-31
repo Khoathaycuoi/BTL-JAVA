@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.nhakhoa.backend.dto.UpdateMeRequest;
 
 
 @Service
@@ -61,40 +62,53 @@ public class UserService {
         String username = SecurityUtils.getCurrentUsername();
         if (username == null) return null;
 
-        String role = SecurityUtils.getCurrentUserRole();
-        ConNguoi cn = null;
+        TaiKhoan tk = taiKhoanRepo.findByTenDangNhap(username);
+        if (tk == null) return null;
 
-        if ("admin".equalsIgnoreCase(username)) {
-            cn = conNguoiRepo.findBySdt("0000000000").orElse(null);
-        } else {
-            cn = conNguoiRepo.findBySdt(username).orElse(null);
-        }
-
+        ConNguoi cn = conNguoiRepo.findById(tk.getMaDinhDanh()).orElse(null);
         if (cn == null) return null;
 
+        String role = tk.getVaiTro();
         String id = "N/A";
 
         if ("ROLE_ADMIN".equals(role)) {
             id = cn.getMaDinhDanh();
-        }
-        else if ("ROLE_BACSI".equals(role)) {
+        } else if ("ROLE_BACSI".equals(role)) {
             var nv = nhanVienRepo.findByMaDinhDanh(cn.getMaDinhDanh()).orElse(null);
             if (nv != null) {
                 var bs = bacSiRepo.findByIdNhanVien(nv.getIdNhanVien()).orElse(null);
                 if (bs != null) id = bs.getMaBacSi();
             }
-        }
-        else if ("ROLE_NHANVIEN".equals(role)) {
+        } else if ("ROLE_NHANVIEN".equals(role)) {
             var nv = nhanVienRepo.findByMaDinhDanh(cn.getMaDinhDanh()).orElse(null);
             if (nv != null) id = nv.getIdNhanVien();
-        }
-        else if ("ROLE_USER".equals(role)) {
+        } else if ("ROLE_USER".equals(role)) {
             var kh = khachHangRepo.findByMaDinhDanh(cn.getMaDinhDanh()).orElse(null);
             if (kh != null) id = kh.getMaKH();
         }
 
         return new UserResponse(id, cn.getTen(), cn.getSdt(), cn.getGioiTinh(), role);
     }
+
+    @Transactional
+    public void updateMyInfo(UpdateMeRequest request) {
+        String username = SecurityUtils.getCurrentUsername();
+        if (username == null) throw new RuntimeException("Chưa xác thực người dùng");
+
+        TaiKhoan tk = taiKhoanRepo.findByTenDangNhap(username);
+        if (tk == null) throw new RuntimeException("Không tìm thấy tài khoản");
+
+        ConNguoi cn = conNguoiRepo.findById(tk.getMaDinhDanh())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy dữ liệu người dùng"));
+
+        cn.setTen(request.getTen());
+        cn.setGioiTinh(request.getGioiTinh());
+        cn.setNgaySinh(request.getNgaySinh());
+        cn.setDiaChi(request.getDiaChi());
+
+        conNguoiRepo.save(cn);
+    }
+
     @Transactional
     public void xoaMemTaiKhoan(String username) {
         TaiKhoan tk = taiKhoanRepo.findByTenDangNhap(username);
