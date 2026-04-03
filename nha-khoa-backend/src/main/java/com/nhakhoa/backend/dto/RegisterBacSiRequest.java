@@ -11,8 +11,7 @@ public class RegisterBacSiRequest {
     @Pattern(regexp = "^\\d{12}$", message = "Mã định danh/CCCD phải bao gồm chính xác 12 chữ số")
     private String maDinhDanh;
     private String ten;
-    @Pattern(regexp = "^0[3|5|7|8|9]\\d{8}$", message = "Số điện thoại không hợp lệ (phải bắt đầu bằng 03,05,07,08,09 và có 10 số)")
-    private String sdt;
+    @Pattern(regexp = "^0[0-9]{9}$", message = "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số")    private String sdt;
     private String gioiTinh;
     @TuoiHopLe
     private LocalDate ngaySinh;
