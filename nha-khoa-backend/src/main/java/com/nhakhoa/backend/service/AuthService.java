@@ -35,7 +35,6 @@ public class AuthService {
 
     @Transactional
     public String registerKhachHang(RegisterKhachHangRequest request) {
-        // Khách hàng thì ai cũng tự đăng ký được, không cần kiểm tra quyền
 
         checkConNguoi(request.getMaDinhDanh(), request.getSdt());
 
@@ -52,12 +51,12 @@ public class AuthService {
 
         saveTaiKhoan(request.getSdt(), request.getMatKhau(), "ROLE_USER", cn.getMaDinhDanh());
 
-        return "Đăng ký Khách hàng thành công! \nUsername: " + request.getSdt() + "\npassword: " + request.getMatKhau();
+        return "Đăng ký Khách hàng thành công! \nMã Khách Hàng: " + maKH + "\nUsername: " + request.getSdt() + "\npassword: " + request.getMatKhau();
     }
 
     @Transactional
     public String registerNhanVien(RegisterNhanVienRequest request) {
-        // KIỂM TRA QUYỀN: Chỉ ADMIN mới được tạo Nhân viên
+
         String role = SecurityUtils.getCurrentUserRole();
         if (role == null || !role.equals("ROLE_ADMIN")) {
             throw new RuntimeException("Chỉ Admin mới có quyền tạo Nhân viên!");
@@ -82,7 +81,6 @@ public class AuthService {
 
     @Transactional
     public String registerBacSi(RegisterBacSiRequest request) {
-        // KIỂM TRA QUYỀN: Chỉ ADMIN mới được tạo Bác sĩ
         String role = SecurityUtils.getCurrentUserRole();
         if (role == null || !role.equals("ROLE_ADMIN")) {
             throw new RuntimeException("Chỉ Admin mới có quyền tạo Bác sĩ!");

@@ -26,7 +26,6 @@ public class NhanVien {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    // Quan hệ 1 - Nhiều: 1 Nhân viên có nhiều bản ghi Chấm công
     @OneToMany(mappedBy = "nhanVien", cascade = CascadeType.ALL)
     private List<ChamCong> danhSachChamCong;
 }

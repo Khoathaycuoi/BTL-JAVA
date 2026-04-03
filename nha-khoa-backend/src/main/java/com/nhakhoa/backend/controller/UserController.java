@@ -1,19 +1,16 @@
 package com.nhakhoa.backend.controller;
 
 import com.nhakhoa.backend.dto.UpdateMeRequest;
-import com.nhakhoa.backend.dto.UserResponse;
+import com.nhakhoa.backend.dto.UserDetailResponse;
+import com.nhakhoa.backend.dto.UserListResponse;
 import com.nhakhoa.backend.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import com.nhakhoa.backend.dto.ChangePasswordRequest;
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -25,30 +22,29 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/bac-si")
-    public ResponseEntity<List<UserResponse>> getBacSi() {
-        return ResponseEntity.ok(userService.getAllBacSi());
+    public ResponseEntity<List<UserListResponse>> getBacSi(@RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(userService.getAllBacSi(keyword));
     }
 
     @GetMapping("/nhan-vien")
-    public ResponseEntity<List<UserResponse>> getNhanVien() {
-        return ResponseEntity.ok(userService.getAllNhanVien());
+    public ResponseEntity<List<UserListResponse>> getNhanVien(@RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(userService.getAllNhanVien(keyword));
     }
 
     @GetMapping("/khach-hang")
-    public ResponseEntity<List<UserResponse>> getKhachHang() {
-        return ResponseEntity.ok(userService.getAllKhachHang());
+    public ResponseEntity<List<UserListResponse>> getKhachHang(@RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(userService.getAllKhachHang(keyword));
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyProfile() {
-        UserResponse myInfo = userService.getMyInfo();
+        UserDetailResponse myInfo = userService.getMyInfo();
         if (myInfo == null) {
             return ResponseEntity.status(404).body("Không tìm thấy thông tin người dùng");
         }
         return ResponseEntity.ok(myInfo);
     }
     // Xóa mềm
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{username}/xoa")
     public ResponseEntity<?> xoaTaiKhoan(@PathVariable String username) {
         try {
@@ -60,7 +56,6 @@ public class UserController {
     }
 
     // Khôi phục
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{username}/khoi-phuc")
     public ResponseEntity<?> khoiPhucTaiKhoan(@PathVariable String username) {
         try {
@@ -92,6 +87,57 @@ public class UserController {
             return ResponseEntity.ok("Đổi mật khẩu thành công!");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/detail/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable String id) {
+        try {
+            return ResponseEntity.ok(userService.getUserById(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/bac-si/hoat-dong")
+    public ResponseEntity<List<UserListResponse>> getBacSiHoatDong(@RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(userService.getBacSiHoatDong(keyword));
+    }
+
+    @GetMapping("/bac-si/khong-hoat-dong")
+    public ResponseEntity<?> getBacSiKhongHoatDong(@RequestParam(required = false) String keyword) {
+        try {
+            return ResponseEntity.ok(userService.getBacSiKhongHoatDong(keyword));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/nhan-vien/hoat-dong")
+    public ResponseEntity<List<UserListResponse>> getNhanVienHoatDong(@RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(userService.getNhanVienHoatDong(keyword));
+    }
+
+    @GetMapping("/nhan-vien/khong-hoat-dong")
+    public ResponseEntity<?> getNhanVienKhongHoatDong(@RequestParam(required = false) String keyword) {
+        try {
+            return ResponseEntity.ok(userService.getNhanVienKhongHoatDong(keyword));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/khach-hang/hoat-dong")
+    public ResponseEntity<List<UserListResponse>> getKhachHangHoatDong(@RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(userService.getKhachHangHoatDong(keyword));
+    }
+
+    @GetMapping("/khach-hang/khong-hoat-dong")
+    public ResponseEntity<?> getKhachHangKhongHoatDong(@RequestParam(required = false) String keyword) {
+        try {
+            return ResponseEntity.ok(userService.getKhachHangKhongHoatDong(keyword));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
         }
     }
 }
