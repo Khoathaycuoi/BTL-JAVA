@@ -12,4 +12,5 @@ public class AddDichVuRequest {
     private String tenDichVu;
     private String moTa;
     private BigDecimal donGia;
+    private String trangThai;
 }

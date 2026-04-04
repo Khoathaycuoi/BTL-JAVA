@@ -27,4 +27,8 @@ public class DichVu {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "Trang_thai")
+    private String trangThai = "Hoạt động";
+
 }
