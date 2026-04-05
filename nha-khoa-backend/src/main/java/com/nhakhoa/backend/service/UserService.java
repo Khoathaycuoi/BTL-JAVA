@@ -1,6 +1,7 @@
 package com.nhakhoa.backend.service;
 
-import com.nhakhoa.backend.dto.UserResponse;
+import com.nhakhoa.backend.dto.UserDetailResponse;
+import com.nhakhoa.backend.dto.UserListResponse;
 import com.nhakhoa.backend.entity.ConNguoi;
 import com.nhakhoa.backend.entity.NhanVien;
 import com.nhakhoa.backend.entity.TaiKhoan;
@@ -8,6 +9,7 @@ import com.nhakhoa.backend.repository.*;
 import com.nhakhoa.backend.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
@@ -17,6 +19,7 @@ import com.nhakhoa.backend.dto.ChangePasswordRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.nhakhoa.backend.entity.BacSi;
 import com.nhakhoa.backend.entity.KhachHang;
+import org.springframework.web.server.ResponseStatusException;
 
 
 @Service
@@ -41,64 +44,50 @@ public class UserService {
                 .orElse("CHUA_CO_TAI_KHOAN");
     }
 
-    public List<UserResponse> getAllBacSi() {
+    public List<UserListResponse> getAllBacSi(String keyword) {
         return bacSiRepo.findAll().stream().map(bs -> {
-            NhanVien nv = nhanVienRepo.findById(bs.getIdNhanVien()).orElse(null);
-            if (nv == null) return null;
-            ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
-
-            return new UserResponse(bs.getMaBacSi(),
-                    cn != null ? cn.getTen() : "N/A",
-                    cn != null ? cn.getSdt() : "N/A",
-                    cn != null ? cn.getGioiTinh() : "N/A",
-                    "BAC_SI",
-                    cn != null ? cn.getDiaChi() : "N/A",
-                    bs.getBangCap(), bs.getChungChi(),
-                    cn != null ? cn.getNgaySinh() : null,
-                    null, bs.getSoNamKinhNghiem(),
-                    getTrangThaiTaiKhoan(nv.getMaDinhDanh())); // Lấy trạng thái
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+                    NhanVien nv = nhanVienRepo.findById(bs.getIdNhanVien()).orElse(null);
+                    if (nv == null) return null;
+                    ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
+                    return new UserListResponse(
+                            bs.getMaBacSi(), cn != null ? cn.getTen() : "N/A",
+                            cn != null ? cn.getSdt() : "N/A", cn != null ? cn.getGioiTinh() : "N/A",
+                            "BAC_SI", getTrangThaiTaiKhoan(nv.getMaDinhDanh())
+                    );
+                }).filter(Objects::nonNull)
+                .filter(u -> matchesKeyword(u, keyword))
+                .collect(Collectors.toList());
     }
 
-    public List<UserResponse> getAllNhanVien() {
+    public List<UserListResponse> getAllNhanVien(String keyword) {
         return nhanVienRepo.findAll().stream()
-                .filter(nv -> !bacSiRepo.existsByIdNhanVien(nv.getIdNhanVien())) // Loại bỏ bác sĩ
+                .filter(nv -> !bacSiRepo.existsByIdNhanVien(nv.getIdNhanVien()))
                 .map(nv -> {
                     ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
-                    return new UserResponse(
-                            nv.getIdNhanVien(),
-                            cn != null ? cn.getTen() : "N/A",
-                            cn != null ? cn.getSdt() : "N/A",
-                            cn != null ? cn.getGioiTinh() : "N/A",
-                            "NHAN_VIEN",
-                            cn != null ? cn.getDiaChi() : "N/A",
-                            null, null,
-                            cn != null ? cn.getNgaySinh() : null,
-                            null, null,
-                            getTrangThaiTaiKhoan(nv.getMaDinhDanh()) // Thêm trạng thái
+                    return new UserListResponse(
+                            nv.getIdNhanVien(), cn != null ? cn.getTen() : "N/A",
+                            cn != null ? cn.getSdt() : "N/A", cn != null ? cn.getGioiTinh() : "N/A",
+                            "NHAN_VIEN", getTrangThaiTaiKhoan(nv.getMaDinhDanh())
                     );
-                }).collect(Collectors.toList());
+                }).filter(Objects::nonNull)
+                .filter(u -> matchesKeyword(u, keyword))
+                .collect(Collectors.toList());
     }
 
-    public List<UserResponse> getAllKhachHang() {
+    public List<UserListResponse> getAllKhachHang(String keyword) {
         return khachHangRepo.findAll().stream().map(kh -> {
-            ConNguoi cn = conNguoiRepo.findById(kh.getMaDinhDanh()).orElse(null);
-            return new UserResponse(
-                    kh.getMaKH(),
-                    cn != null ? cn.getTen() : "N/A",
-                    cn != null ? cn.getSdt() : "N/A",
-                    cn != null ? cn.getGioiTinh() : "N/A",
-                    "KHACH_HANG",
-                    cn != null ? cn.getDiaChi() : "N/A",
-                    null, null,
-                    cn != null ? cn.getNgaySinh() : null,
-                    kh.getTienSuBenh(), null,
-                    getTrangThaiTaiKhoan(kh.getMaDinhDanh()) // Thêm trạng thái
-            );
-        }).collect(Collectors.toList());
+                    ConNguoi cn = conNguoiRepo.findById(kh.getMaDinhDanh()).orElse(null);
+                    return new UserListResponse(
+                            kh.getMaKH(), cn != null ? cn.getTen() : "N/A",
+                            cn != null ? cn.getSdt() : "N/A", cn != null ? cn.getGioiTinh() : "N/A",
+                            "KHACH_HANG", getTrangThaiTaiKhoan(kh.getMaDinhDanh())
+                    );
+                }).filter(Objects::nonNull)
+                .filter(u -> matchesKeyword(u, keyword))
+                .collect(Collectors.toList());
     }
 
-    public UserResponse getMyInfo() {
+    public UserDetailResponse getMyInfo() {
         String username = SecurityUtils.getCurrentUsername();
         if (username == null) return null;
 
@@ -139,19 +128,10 @@ public class UserService {
             }
         }
 
-        return new UserResponse(
-                id,
-                cn.getTen(),
-                cn.getSdt(),
-                cn.getGioiTinh(),
-                role,
-                cn.getDiaChi(),
-                bangCap,
-                chungChi,
-                cn.getNgaySinh(),
-                tienSuBenh,
-                soNamKinhNghiem,
-                tk.getTrangThai()
+        return new UserDetailResponse(
+                id, cn.getTen(), cn.getSdt(), cn.getGioiTinh(), role,
+                cn.getDiaChi(), bangCap, chungChi, cn.getNgaySinh(),
+                tienSuBenh, soNamKinhNghiem, tk.getTrangThai()
         );
     }
 
@@ -198,6 +178,10 @@ public class UserService {
 
     @Transactional
     public void xoaMemTaiKhoan(String username) {
+        String role = SecurityUtils.getCurrentUserRole();
+        if (role == null || !role.equals("ROLE_ADMIN")) {
+            throw new RuntimeException("Chỉ Admin mới có quyền vô hiệu hóa tài khoản!");
+        }
         TaiKhoan tk = taiKhoanRepo.findByTenDangNhap(username);
         if (tk == null) {
             throw new RuntimeException("Không tìm thấy tài khoản: " + username);
@@ -209,6 +193,10 @@ public class UserService {
 
     @Transactional
     public void khoiPhucTaiKhoan(String username) {
+        String role = SecurityUtils.getCurrentUserRole();
+        if (role == null || !role.equals("ROLE_ADMIN")) {
+            throw new RuntimeException("Chỉ Admin mới có quyền khôi phục tài khoản!");
+        }
         TaiKhoan tk = taiKhoanRepo.findByTenDangNhap(username);
         if (tk == null) {
             throw new RuntimeException("Không tìm thấy tài khoản: " + username);
@@ -232,5 +220,164 @@ public class UserService {
 
         tk.setMatKhau(passwordEncoder.encode(request.getNewPassword()));
         taiKhoanRepo.save(tk);
+    }
+
+    public UserDetailResponse getUserById(String id) {
+        var khOpt = khachHangRepo.findById(id);
+        if (khOpt.isPresent()) {
+            KhachHang kh = khOpt.get();
+            ConNguoi cn = conNguoiRepo.findById(kh.getMaDinhDanh()).orElse(null);
+            return new UserDetailResponse(
+                    kh.getMaKH(), cn != null ? cn.getTen() : "N/A", cn != null ? cn.getSdt() : "N/A",
+                    cn != null ? cn.getGioiTinh() : "N/A", "KHACH_HANG", cn != null ? cn.getDiaChi() : "N/A",
+                    null, null, cn != null ? cn.getNgaySinh() : null, kh.getTienSuBenh(), null,
+                    cn != null ? getTrangThaiTaiKhoan(cn.getMaDinhDanh()) : "N/A"
+            );
+        }
+
+        var bsOpt = bacSiRepo.findById(id);
+        if (bsOpt.isPresent()) {
+            BacSi bs = bsOpt.get();
+            NhanVien nv = nhanVienRepo.findById(bs.getIdNhanVien()).orElse(null);
+            ConNguoi cn = (nv != null) ? conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null) : null;
+            return new UserDetailResponse(
+                    bs.getMaBacSi(), cn != null ? cn.getTen() : "N/A", cn != null ? cn.getSdt() : "N/A",
+                    cn != null ? cn.getGioiTinh() : "N/A", "BAC_SI", cn != null ? cn.getDiaChi() : "N/A",
+                    bs.getBangCap(), bs.getChungChi(), cn != null ? cn.getNgaySinh() : null,
+                    null, bs.getSoNamKinhNghiem(), cn != null ? getTrangThaiTaiKhoan(cn.getMaDinhDanh()) : "N/A"
+            );
+        }
+
+        var nvOpt = nhanVienRepo.findById(id);
+        if (nvOpt.isPresent()) {
+            NhanVien nv = nvOpt.get();
+            ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
+            return new UserDetailResponse(
+                    nv.getIdNhanVien(), cn != null ? cn.getTen() : "N/A", cn != null ? cn.getSdt() : "N/A",
+                    cn != null ? cn.getGioiTinh() : "N/A", "NHAN_VIEN", cn != null ? cn.getDiaChi() : "N/A",
+                    null, null, cn != null ? cn.getNgaySinh() : null, null, null,
+                    cn != null ? getTrangThaiTaiKhoan(cn.getMaDinhDanh()) : "N/A"
+            );
+        }
+
+        throw new RuntimeException("Không tìm thấy người dùng với ID: " + id);
+    }
+
+    public List<UserListResponse> getBacSiHoatDong(String keyword) {
+        return bacSiRepo.findAll().stream().map(bs -> {
+            NhanVien nv = nhanVienRepo.findById(bs.getIdNhanVien()).orElse(null);
+            if (nv == null) return null;
+            String trangThai = getTrangThaiTaiKhoan(nv.getMaDinhDanh());
+            if (!"Hoạt động".equalsIgnoreCase(trangThai)) return null;
+            ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
+            return new UserListResponse(
+                    bs.getMaBacSi(), cn != null ? cn.getTen() : "N/A",
+                    cn != null ? cn.getSdt() : "N/A", cn != null ? cn.getGioiTinh() : "N/A",
+                    "BAC_SI", trangThai
+            );
+        }).filter(Objects::nonNull)
+                .filter(u -> matchesKeyword(u, keyword))
+                .collect(Collectors.toList());
+    }
+
+    public List<UserListResponse> getBacSiKhongHoatDong(String keyword) {
+        String role = SecurityUtils.getCurrentUserRole();
+        if (role == null || !role.equals("ROLE_ADMIN")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ Admin mới xem được bác sĩ không còn hoạt động!");
+        }
+        return bacSiRepo.findAll().stream().map(bs -> {
+            NhanVien nv = nhanVienRepo.findById(bs.getIdNhanVien()).orElse(null);
+            if (nv == null) return null;
+            String trangThai = getTrangThaiTaiKhoan(nv.getMaDinhDanh());
+            if (!"Không hoạt động".equalsIgnoreCase(trangThai)) return null;
+            ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
+            return new UserListResponse(
+                    bs.getMaBacSi(), cn != null ? cn.getTen() : "N/A",
+                    cn != null ? cn.getSdt() : "N/A", cn != null ? cn.getGioiTinh() : "N/A",
+                    "BAC_SI", trangThai
+            );
+        }).filter(Objects::nonNull)
+                .filter(u -> matchesKeyword(u, keyword))
+                .collect(Collectors.toList());
+    }
+
+    public List<UserListResponse> getNhanVienHoatDong(String keyword) {
+        return nhanVienRepo.findAll().stream()
+                .filter(nv -> !bacSiRepo.existsByIdNhanVien(nv.getIdNhanVien()))
+                .map(nv -> {
+                    String trangThai = getTrangThaiTaiKhoan(nv.getMaDinhDanh());
+                    if (!"Hoạt động".equalsIgnoreCase(trangThai)) return null;
+                    ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
+                    return new UserListResponse(
+                            nv.getIdNhanVien(), cn != null ? cn.getTen() : "N/A",
+                            cn != null ? cn.getSdt() : "N/A", cn != null ? cn.getGioiTinh() : "N/A",
+                            "NHAN_VIEN", trangThai
+                    );
+                }).filter(Objects::nonNull)
+                .filter(u -> matchesKeyword(u, keyword))
+                .collect(Collectors.toList());
+    }
+
+    public List<UserListResponse> getNhanVienKhongHoatDong(String keyword) {
+        String role = SecurityUtils.getCurrentUserRole();
+        if (role == null || !role.equals("ROLE_ADMIN")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ Admin mới xem được nhân viên không còn hoạt động!");
+        }
+        return nhanVienRepo.findAll().stream()
+                .filter(nv -> !bacSiRepo.existsByIdNhanVien(nv.getIdNhanVien()))
+                .map(nv -> {
+                    String trangThai = getTrangThaiTaiKhoan(nv.getMaDinhDanh());
+                    if (!"Không hoạt động".equalsIgnoreCase(trangThai)) return null;
+                    ConNguoi cn = conNguoiRepo.findById(nv.getMaDinhDanh()).orElse(null);
+                    return new UserListResponse(
+                            nv.getIdNhanVien(), cn != null ? cn.getTen() : "N/A",
+                            cn != null ? cn.getSdt() : "N/A", cn != null ? cn.getGioiTinh() : "N/A",
+                            "NHAN_VIEN", trangThai
+                    );
+                }).filter(Objects::nonNull)
+                .filter(u -> matchesKeyword(u, keyword))
+                .collect(Collectors.toList());
+    }
+
+    public List<UserListResponse> getKhachHangHoatDong(String keyword) {
+        return khachHangRepo.findAll().stream().map(kh -> {
+            String trangThai = getTrangThaiTaiKhoan(kh.getMaDinhDanh());
+            if (!"Hoạt động".equalsIgnoreCase(trangThai)) return null;
+            ConNguoi cn = conNguoiRepo.findById(kh.getMaDinhDanh()).orElse(null);
+            return new UserListResponse(
+                    kh.getMaKH(), cn != null ? cn.getTen() : "N/A",
+                    cn != null ? cn.getSdt() : "N/A", cn != null ? cn.getGioiTinh() : "N/A",
+                    "KHACH_HANG", trangThai
+            );
+        }).filter(Objects::nonNull)
+                .filter(u -> matchesKeyword(u, keyword))
+                .collect(Collectors.toList());
+    }
+
+    public List<UserListResponse> getKhachHangKhongHoatDong(String keyword) {
+        String role = SecurityUtils.getCurrentUserRole();
+        if (role == null || !role.equals("ROLE_ADMIN")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ Admin mới xem được khách hàng không còn hoạt động!");
+        }
+        return khachHangRepo.findAll().stream().map(kh -> {
+            String trangThai = getTrangThaiTaiKhoan(kh.getMaDinhDanh());
+            if (!"Không hoạt động".equalsIgnoreCase(trangThai)) return null;
+            ConNguoi cn = conNguoiRepo.findById(kh.getMaDinhDanh()).orElse(null);
+            return new UserListResponse(
+                    kh.getMaKH(), cn != null ? cn.getTen() : "N/A",
+                    cn != null ? cn.getSdt() : "N/A", cn != null ? cn.getGioiTinh() : "N/A",
+                    "KHACH_HANG", trangThai
+            );
+        }).filter(Objects::nonNull)
+                .filter(u -> matchesKeyword(u, keyword))
+                .collect(Collectors.toList());
+    }
+
+    private boolean matchesKeyword(UserListResponse user, String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) return true;
+        String kw = keyword.toLowerCase().trim();
+        return (user.getTen() != null && user.getTen().toLowerCase().contains(kw)) ||
+                (user.getSdt() != null && user.getSdt().contains(kw)) ||
+                (user.getId() != null && user.getId().toLowerCase().contains(kw));
     }
 }

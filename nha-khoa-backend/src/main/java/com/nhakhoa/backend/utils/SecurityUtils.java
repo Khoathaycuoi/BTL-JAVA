@@ -6,7 +6,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public class SecurityUtils {
 
-    // Lấy Tên đăng nhập (SĐT) của người đang gọi API
     public static String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
@@ -15,7 +14,6 @@ public class SecurityUtils {
         return null;
     }
 
-    // Lấy Quyền (Role) của người đang gọi API
     public static String getCurrentUserRole() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {

@@ -15,7 +15,6 @@ public class ChamCong {
     @Column(name = "Ma_cham_cong", length = 20)
     private String maChamCong;
 
-    // Quan hệ Nhiều - 1: Nhiều bản ghi Chấm công thuộc về 1 Nhân viên
     @ManyToOne
     @JoinColumn(name = "ID_nhan_vien", nullable = false)
     private NhanVien nhanVien;
