@@ -9,5 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface KhachHangRepository extends JpaRepository<KhachHang, String> {
+    boolean existsByMaDinhDanh(String maDinhDanh);
     Optional<KhachHang> findByMaDinhDanh(String maDinhDanh);
 }

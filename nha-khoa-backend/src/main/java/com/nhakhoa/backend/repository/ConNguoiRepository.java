@@ -9,5 +9,5 @@ public interface ConNguoiRepository extends JpaRepository<ConNguoi, String> {
 
     boolean existsBySdt(String sdt);
     java.util.Optional<ConNguoi> findBySdt(String sdt);
-
+    ScopedValue<Object> findByMaDinhDanh(String maDinhDanh);
 }
