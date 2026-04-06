@@ -31,4 +31,10 @@ public class LichHen {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "Ma_bac_si")
+    private String maBacSi;
+
+    @Column(name = "ghi_chu")
+    private String ghi_chu;
 }
