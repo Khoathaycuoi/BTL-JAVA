@@ -56,7 +56,7 @@ public class LichHenService {
             throw new RuntimeException("Giờ hẹn không hợp lệ (đã qua giờ này)!");
         }
 
-        // 1. Kiểm tra đăng nhập
+
         String username = SecurityUtils.getCurrentUsername();
         if (username == null) throw new RuntimeException("Bạn cần đăng nhập để đặt lịch!");
 
@@ -67,14 +67,14 @@ public class LichHenService {
         String maKHToSave = null;
         String trangThaiBanDau = "Chờ xác nhận";
 
-        // 2. Xử lý logic rẽ nhánh: Ai là người đặt lịch?
+
         if ("ROLE_USER".equals(role)) {
-            // Khách hàng tự đặt
+
             KhachHang kh = khachHangRepo.findByMaDinhDanh(tk.getMaDinhDanh())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin khách hàng!"));
             maKHToSave = kh.getMaKH();
         } else if ("ROLE_NHANVIEN".equals(role) || "ROLE_ADMIN".equals(role)) {
-            // Nhân viên/Quản lý đặt hộ
+
             if (request.getMaKhachHang() == null || request.getMaKhachHang().trim().isEmpty()) {
                 throw new RuntimeException("Nhân viên đặt lịch hộ vui lòng chọn/truyền mã khách hàng!");
             }
@@ -86,16 +86,14 @@ public class LichHenService {
             throw new RuntimeException("Bạn không có quyền thực hiện chức năng này!");
         }
 
-        // 3. Kiểm tra danh sách dịch vụ
+
         if (request.getDanhSachMaDichVu() == null || request.getDanhSachMaDichVu().isEmpty()) {
             throw new RuntimeException("Vui lòng chọn ít nhất 1 dịch vụ!");
         }
 
-        // 4. Sinh mã Lịch hẹn
         long count = lichHenRepo.count();
         String maLichHen = String.format("LH_%04d", count + 1);
 
-        // 5. Tạo và gán thông tin cơ bản cho Lịch Hẹn
         LichHen lichHen = new LichHen();
         lichHen.setMaLichHen(maLichHen);
         lichHen.setNgayHen(request.getNgayHen());
@@ -103,14 +101,12 @@ public class LichHenService {
         lichHen.setTrangThai(trangThaiBanDau);
         lichHen.setMaKH(maKHToSave);
 
-        // 6. Xử lý Bác sĩ & Kiểm tra trùng lịch
         if (request.getMaBacSi() != null && !request.getMaBacSi().trim().isEmpty()) {
             boolean isBacSiExist = bacSiRepo.existsById(request.getMaBacSi());
             if (!isBacSiExist) {
                 throw new RuntimeException("Không tìm thấy bác sĩ với mã: " + request.getMaBacSi());
             }
 
-            // Kiểm tra trùng lịch (Nếu trạng thái không phải là "Đã hủy" thì tính là đang bận)
             boolean isKinLich = lichHenRepo.existsByMaBacSiAndNgayHenAndGioHenAndTrangThaiNot(
                     request.getMaBacSi(), request.getNgayHen(), request.getGioHen(), "Đã hủy"
             );
@@ -122,10 +118,8 @@ public class LichHenService {
             lichHen.setMaBacSi(request.getMaBacSi());
         }
 
-        // Lưu lịch hẹn chính
         lichHenRepo.save(lichHen);
 
-        // 7. Lưu bảng Chi tiết lịch hẹn (Chốt giá dịch vụ)
         for (String maDV : request.getDanhSachMaDichVu()) {
             DichVu dv = dichVuRepo.findByMaDichVu(maDV);
             if (dv == null) {
@@ -135,7 +129,7 @@ public class LichHenService {
             ChiTietLichHen chiTiet = new ChiTietLichHen();
             chiTiet.setLichHen(lichHen);
             chiTiet.setDichVu(dv);
-            chiTiet.setGiaTienThoiDiemDat(dv.getDonGia()); // Lưu chết giá lúc đặt
+            chiTiet.setGiaTienThoiDiemDat(dv.getDonGia());
 
             chiTietLichHenRepo.save(chiTiet);
         }
@@ -192,7 +186,7 @@ public class LichHenService {
         return result;
     }
 
-    // LichHenService.java
+
     @Transactional
     public String xacNhanLichHen(String maLichHen) {
         LichHen lh = lichHenRepo.findById(maLichHen)
@@ -290,10 +284,8 @@ public class LichHenService {
             LocalDateTime thoiGianHen = LocalDateTime.of(lh.getNgayHen(), lh.getGioHen());
             LocalDateTime thoiGianHienTai = LocalDateTime.now();
 
-            // Tính khoảng cách từ bây giờ đến lúc khám
             Duration khoangCach = Duration.between(thoiGianHienTai, thoiGianHen);
 
-            // Nếu thời gian từ lúc bấm hủy đến lúc khám CÒN DƯỚI 12 TIẾNG, hoặc đã qua giờ khám
             if (khoangCach.toHours() < 12) {
                 throw new RuntimeException("Chỉ được hủy lịch hẹn trực tuyến trước 12 tiếng. Vui lòng liên hệ Hotline Lễ tân để được hỗ trợ!");
             }
