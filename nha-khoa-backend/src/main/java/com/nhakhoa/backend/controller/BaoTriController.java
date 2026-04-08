@@ -23,7 +23,7 @@ public class BaoTriController {
     private BaoTriService baoTriService;
 
     //Tạo phiếu bảo trì mới
-    @PreAuthorize("hasRole('ADMIN','BACSI','NHANVIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN','BACSI','NHANVIEN')")
     @PostMapping
     public ResponseEntity<ApiResponse<BaoTriResponse>> taoPhieuBaoTri(@RequestBody BaoTriRequest request) {
         BaoTriResponse data = baoTriService.taoPhieuBaoTri(request);
@@ -32,7 +32,7 @@ public class BaoTriController {
     }
 
     //Lấy danh sách tất cả các lần bảo trì
-    @PreAuthorize("hasRole('ADMIN','BACSI','NHANVIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN','BACSI','NHANVIEN')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<BaoTriResponse>>> layDanhSachTatCa() {
         List<BaoTriResponse> data = baoTriService.layDanhSachTatCa();
@@ -40,7 +40,7 @@ public class BaoTriController {
     }
 
     //Lấy danh sách tất cả các lần bảo trì theo mã bảo trì
-    @PreAuthorize("hasRole('ADMIN','BACSI','NHANVIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN','BACSI','NHANVIEN')")
     @GetMapping("/{maBaoTri}")
     public ResponseEntity<ApiResponse<BaoTriResponse>> layChiTiet(@PathVariable String maBaoTri) {
         BaoTriResponse data = baoTriService.layChiTiet(maBaoTri);
@@ -48,7 +48,7 @@ public class BaoTriController {
     }
 
     //Cập nhật thông tin phiếu bảo trì
-    @PreAuthorize("hasRole('ADMIN','BACSI','NHANVIEN')")
+    @PreAuthorize("hasAnyRole('ADMIN','BACSI','NHANVIEN')")
     @PutMapping("/{maBaoTri}")
     public ResponseEntity<ApiResponse<BaoTriResponse>> capNhatPhieuBaoTri(@PathVariable String maBaoTri, @RequestBody CapNhatBaoTriDTO updateDTO) {
         BaoTriResponse data = baoTriService.capNhatPhieuBaoTri(maBaoTri, updateDTO);

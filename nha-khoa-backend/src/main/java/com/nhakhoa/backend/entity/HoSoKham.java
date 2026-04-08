@@ -20,7 +20,7 @@ public class HoSoKham {
     private String trieuChung;
 
     @Column(name = "Chuan_doan", columnDefinition = "TEXT")
-    private String chanDoan;
+    private String chuanDoan;
 
     @Column(name = "Ngay_tai_kham")
     private LocalDate ngayTaiKham;
