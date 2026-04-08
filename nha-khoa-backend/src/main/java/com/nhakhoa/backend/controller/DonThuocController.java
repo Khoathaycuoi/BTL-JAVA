@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/prescriptions")
+@RequestMapping("/api/prescriptions")
 public class DonThuocController {
 
     @Autowired
