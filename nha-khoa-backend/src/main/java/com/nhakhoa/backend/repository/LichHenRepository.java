@@ -2,6 +2,8 @@ package com.nhakhoa.backend.repository;
 
 import com.nhakhoa.backend.entity.LichHen;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.time.LocalTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,4 +38,7 @@ public interface LichHenRepository extends JpaRepository<LichHen, String> {
             @Param("tenBacSi") String tenBacSi,
             @Param("sdtBacSi") String sdtBacSi
     );
+
+    @Query("SELECT l.gioHen FROM LichHen l WHERE l.maBacSi = :maBacSi AND l.ngayHen = :ngay AND l.trangThai != 'Đã hủy'")
+    List<LocalTime> findGioDaDatByMaBacSiAndNgay(@Param("maBacSi") String maBacSi, @Param("ngay") LocalDate ngay);
 }

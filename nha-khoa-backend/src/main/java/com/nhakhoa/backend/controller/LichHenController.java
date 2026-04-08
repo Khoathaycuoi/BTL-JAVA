@@ -12,6 +12,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 
 @RestController
@@ -85,5 +87,12 @@ public class LichHenController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/ca-trong")
+    public ResponseEntity<List<LocalTime>> layCaTrong(
+            @RequestParam String maBacSi,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ngay) {
+        return ResponseEntity.ok(lichHenService.getCaTrong(maBacSi, ngay));
     }
 }

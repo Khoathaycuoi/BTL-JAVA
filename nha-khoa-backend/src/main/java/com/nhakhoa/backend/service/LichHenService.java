@@ -365,4 +365,34 @@ public class LichHenService {
 
         return result;
     }
+    public List<LocalTime> getCaTrong(String maBacSi, LocalDate ngay) {
+        List<LocalTime> tatCaCacCa = new ArrayList<>();
+
+        LocalTime gioBatDauSang = LocalTime.of(8, 0);
+        LocalTime gioKetThucSang = LocalTime.of(11, 0);
+        while (gioBatDauSang.isBefore(gioKetThucSang)) {
+            tatCaCacCa.add(gioBatDauSang);
+            gioBatDauSang = gioBatDauSang.plusMinutes(30);
+        }
+
+        LocalTime gioBatDauChieu = LocalTime.of(13, 0);
+        LocalTime gioKetThucChieu = LocalTime.of(16, 30);
+        while (gioBatDauChieu.isBefore(gioKetThucChieu)) {
+            tatCaCacCa.add(gioBatDauChieu);
+            gioBatDauChieu = gioBatDauChieu.plusMinutes(30);
+        }
+
+        if (ngay.equals(LocalDate.now())) {
+            LocalTime bayGio = LocalTime.now();
+            tatCaCacCa.removeIf(ca -> ca.isBefore(bayGio));
+        }
+
+        List<LocalTime> cacCaDaDat = lichHenRepo.findGioDaDatByMaBacSiAndNgay(maBacSi, ngay);
+
+        if (cacCaDaDat != null && !cacCaDaDat.isEmpty()) {
+            tatCaCacCa.removeAll(cacCaDaDat);
+        }
+
+        return tatCaCacCa;
+    }
 }

@@ -1,5 +1,6 @@
 package com.nhakhoa.backend.service;
 
+import com.nhakhoa.backend.dto.ChamCongResponse;
 import com.nhakhoa.backend.entity.ChamCong;
 import com.nhakhoa.backend.entity.NhanVien;
 import com.nhakhoa.backend.entity.TaiKhoan;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -123,5 +126,48 @@ public class ChamCongService {
         return "Đã cập nhật bản ghi chấm công thành công!";
     }
 
+    private ChamCongResponse mapToResponse(ChamCong cc) {
+        ChamCongResponse dto = new ChamCongResponse();
+        dto.setMaChamCong(cc.getMaChamCong());
 
+        // Kiểm tra nhân viên để tránh lỗi NullPointerException
+        if (cc.getNhanVien() != null) {
+            dto.setMaNhanVien(cc.getNhanVien().getIdNhanVien());
+
+            dto.setTenNhanVien(cc.getNhanVien().getMaDinhDanh());
+        }
+
+        dto.setNgayChamCong(cc.getNgayChamCong());
+        dto.setGioVaoThucTe(cc.getGioVaoThucTe());
+        dto.setGioRaThucTe(cc.getGioRaThucTe());
+        dto.setTrangThai(cc.getTrangThai());
+        dto.setSoPhutTre(cc.getSoPhutTre());
+        dto.setTrangThaiDuyet(cc.getTrangThaiDuyet());
+
+        return dto;
+    }
+
+    public List<ChamCongResponse> getAllChamCong() {
+        return chamCongRepo.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Lấy lịch sử chấm công của chính người đang đăng nhập
+    public List<ChamCongResponse> getLichSuCaNhan() {
+        String username = SecurityUtils.getCurrentUsername();
+        TaiKhoan tk = taiKhoanRepo.findByTenDangNhap(username);
+        NhanVien nv = nhanVienRepo.findByMaDinhDanh(tk.getMaDinhDanh()).get();
+
+        return chamCongRepo.findByNhanVienOrderByNgayChamCongDesc(nv).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Tìm kiếm có bộ lọc (Cho Admin)
+    public List<ChamCongResponse> timKiem(String tenNV, LocalDate ngay, String trangThaiDuyet) {
+        return chamCongRepo.timKiemChamCong(tenNV, ngay, trangThaiDuyet).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 }

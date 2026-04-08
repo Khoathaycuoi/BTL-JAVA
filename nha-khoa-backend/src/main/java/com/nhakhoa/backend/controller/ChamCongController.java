@@ -1,10 +1,15 @@
 package com.nhakhoa.backend.controller;
 
+import com.nhakhoa.backend.entity.ChamCong;
 import com.nhakhoa.backend.service.ChamCongService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.nhakhoa.backend.dto.ChamCongResponse;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/cham-cong")
@@ -45,5 +50,23 @@ public class ChamCongController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/tat-ca")
+    public ResponseEntity<List<ChamCongResponse>> getAll() {
+        return ResponseEntity.ok(chamCongService.getAllChamCong());
+    }
+
+    @GetMapping("/ca-nhan")
+    public ResponseEntity<List<ChamCongResponse>> getMyHistory() {
+        return ResponseEntity.ok(chamCongService.getLichSuCaNhan());
+    }
+
+    @GetMapping("/tim-kiem")
+    public ResponseEntity<List<ChamCongResponse>> search(
+            @RequestParam(required = false) String tenNV,
+            @RequestParam(required = false) LocalDate ngay,
+            @RequestParam(required = false) String trangThaiDuyet) {
+        return ResponseEntity.ok(chamCongService.timKiem(tenNV, ngay, trangThaiDuyet));
     }
 }
