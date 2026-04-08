@@ -33,15 +33,11 @@ public class DichVuController {
 
     @GetMapping("/all")
     public ResponseEntity<?> getAllDichVu() {
-        // Gọi service để lấy danh sách dịch vụ
         List<DichVuResponse> listDichVu = dichVuService.getAllDichVu();
 
-        // Kiểm tra nếu danh sách trống hoặc null (tương tự logic kiểm tra myInfo == null)
         if (listDichVu == null || listDichVu.isEmpty()) {
             return ResponseEntity.status(404).body("Không tìm thấy danh sách dịch vụ");
         }
-
-        // Trả về danh sách dịch vụ với mã 200 OK
         return ResponseEntity.ok(listDichVu);
     }
     @PutMapping("/dv")
@@ -76,35 +72,7 @@ public class DichVuController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-//    //Lọc Theo trạng thái
-//    @GetMapping("/filter")
-//    public ResponseEntity<List<DichVu>> filterDichVu(
-//            @RequestParam(required = false) String status) {
-//
-//        // Gọi bằng biến 'dichVuService' (viết thường chữ d)
-//        List<DichVu> list = dichVuService.getDichVuByFilter(status);
-//        return ResponseEntity.ok(list);
-//    }
-//    //Lọc theo giá
-//    @GetMapping("/search-price")
-//    public ResponseEntity<List<DichVu>> searchByPrice(
-//            @RequestParam(required = false) BigDecimal min,
-//            @RequestParam(required = false) BigDecimal max) {
-//
-//        List<DichVu> result = dichVuService.getDichVuByPriceRange(min, max);
-//        return ResponseEntity.ok(result);
-//    }
-//    //Lọc theo giá và trạng thái
-//    @GetMapping("/search")
-//    public ResponseEntity<List<DichVu>> search(
-//            @RequestParam(required = false) String trangThai,
-//            @RequestParam(required = false) BigDecimal min,
-//            @RequestParam(required = false) BigDecimal max) {
-//
-//        // Gọi instance 'dichVuService' (chữ d viết thường)
-//        List<DichVu> result = dichVuService.getDichVuByTrangThaiAndDonGiaBetween(trangThai, min, max);
-//        return ResponseEntity.ok(result);
-//    }
+
     //Loc ten tt gia
     @GetMapping("/search-all")
     public ResponseEntity<List<DichVu>> searchAll(

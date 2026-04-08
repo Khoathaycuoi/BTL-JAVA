@@ -50,7 +50,8 @@ public class DichVuService {
                             dv.getMaDichVu(),
                             dv.getTenDichVu(),
                             dv.getMoTa(),
-                            dv.getDonGia()
+                            dv.getDonGia(),
+                            dv.getTrangThai()
                             // Thêm các trường khác của DichVuResponse vào đây
                     );
                 })
@@ -94,36 +95,6 @@ public class DichVuService {
         dv.setTrangThai("Hoạt động");
         dichVuRepo.save(dv);
     }
-//    //Lọc theo trạng thái
-//    public List<DichVu> getDichVuByFilter(String trangThai) {
-//        if (trangThai == null || trangThai.isEmpty()) {
-//            return dichVuRepo.findAll();
-//        }
-//        return dichVuRepo.findByTrangThai(trangThai);
-//    }
-//    //Lọc theo đơn giá
-//    public List<DichVu> getDichVuByPriceRange(BigDecimal min, BigDecimal max) {
-//        // Nếu không truyền giá, có thể mặc định từ 0 đến một con số rất lớn
-//        BigDecimal start = (min != null) ? min : BigDecimal.ZERO;
-//        BigDecimal end = (max != null) ? max : new BigDecimal("999999999");
-//
-//        return dichVuRepo.findByDonGiaBetween(start, end);
-//    }
-//
-//    //Lọc theo gia va trang thai hđ
-//    public List<DichVu> getDichVuByTrangThaiAndDonGiaBetween(String trangThai, BigDecimal min, BigDecimal max) {
-//        // 1. Xử lý giá trị mặc định cho khoảng giá
-//        BigDecimal startPrice = (min != null) ? min : BigDecimal.ZERO;
-//        BigDecimal endPrice = (max != null) ? max : new BigDecimal("9999999999");
-//
-//        // 2. Nếu status trống, bạn có thể gọi hàm findByDonGiaBetween cũ
-//        if (trangThai == null || trangThai.isEmpty()) {
-//            return dichVuRepo.findByDonGiaBetween(startPrice, endPrice);
-//        }
-//
-//        // 3. Nếu có đủ status và khoảng giá, gọi hàm mới mở rộng
-//        return dichVuRepo.findByTrangThaiAndDonGiaBetween(trangThai, startPrice, endPrice);
-//    }
 
     //Lọc theo tên tt gia
     public List<DichVu> searchFullDV(String tenDichVu, String trangThai, BigDecimal min, BigDecimal max) {
