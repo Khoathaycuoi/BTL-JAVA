@@ -218,6 +218,10 @@ public class UserService {
             throw new RuntimeException("Mật khẩu cũ không chính xác");
         }
 
+        if (passwordEncoder.matches(request.getNewPassword(), tk.getMatKhau())) {
+            throw new RuntimeException("Mật khẩu mới không được trùng với mật khẩu cũ!");
+        }
+
         tk.setMatKhau(passwordEncoder.encode(request.getNewPassword()));
         taiKhoanRepo.save(tk);
     }

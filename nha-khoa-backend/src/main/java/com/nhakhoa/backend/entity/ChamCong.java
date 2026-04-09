@@ -39,4 +39,7 @@ public class ChamCong {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "trang_thai_duyet", columnDefinition = "NVARCHAR(50) DEFAULT 'Chờ duyệt'")
+    private String trangThaiDuyet = "Chờ duyệt";
 }

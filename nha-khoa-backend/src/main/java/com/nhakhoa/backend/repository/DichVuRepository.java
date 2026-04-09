@@ -10,9 +10,6 @@ public interface DichVuRepository extends JpaRepository<DichVu, String> {
     boolean existsByTenDichVu(String tenDichVu);
     DichVu findByTenDichVu(String tenDichVu);
     DichVu findByMaDichVu(String maDichVu);
-//    List<DichVu> findByTrangThai(String trangThai);
-//    List<DichVu> findByDonGiaBetween(BigDecimal min, BigDecimal max);
-//    List<DichVu> findByTrangThaiAndDonGiaBetween(String trangThai, BigDecimal min, BigDecimal max);
     List<DichVu> findByTenDichVuContainingAndTrangThaiAndDonGiaBetween(
             String tenDichVu, String trangThai, BigDecimal min, BigDecimal max);
     List<DichVu> findByTenDichVuContainingAndDonGiaBetween(String ten, BigDecimal min, BigDecimal max);
